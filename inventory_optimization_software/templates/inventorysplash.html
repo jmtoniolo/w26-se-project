@@ -1,0 +1,32 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>{% block title %}iOS Dashboard{% endblock %}</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+</head>
+<body class="bg-gray-50">
+
+    <header class="bg-blue-100 py-4 px-8 shadow-sm">
+        <h1 class="text-2xl font-semibold text-blue-800">iOS</h1>
+    </header>
+
+    <nav class="bg-white border-b border-gray-200 px-8 py-3">
+        <ul class="flex items-center">
+            <li>
+                <a href="{% url 'add_item' %}" class="bg-blue-500 hover:bg-blue-600 text-white px-4 py-2 rounded-md transition duration-200">
+                    Add
+                </a>
+            </li>
+        </ul>
+    </nav>
+
+    <main class="p-8">
+        {% block content %}
+        <p class="text-gray-600 italic">Welcome! Your content will appear here.</p>
+        {% endblock %}
+    </main>
+
+</body>
+</html>
