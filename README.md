@@ -1,3 +1,6 @@
+# iOS - Inventory Optimization Software
+DISCLAIMER: This code is provided "as is," with absolutely no warranty expressed or implied. Any use of this software is at your own risk.
+
 # Django Project Setup
 
 ## Prerequisites
@@ -10,20 +13,19 @@
 It is best practice to run Django inside a virtual environment to manage dependencies.
 
 ### Install and activate a virtual environment
-```bash
+```Powershell
 python3 -m venv venv
-source venv/bin/activate
+source venv/bin/activate/Activate.ps1
+```
+### Install django in your venv
+```Powershell
+pip install django
 ```
 
-python -m venv venv
-venv\Scripts\activate
-
-pip install django
-
+### Start Django server
+cd into the project directory where manage.py is
+```Powershell
 python manage.py runserver
+```
+Visit http://127.0.0.1:8000/inventory_optimization_software/ with a web browser!
 
-Common Commands
-python manage.py startapp <name>,Creates a new Django app within the project.
-python manage.py makemigrations,Prepares changes to your models for the database.
-python manage.py migrate,Applies the changes to the database.
-python manage.py createsuperuser,Creates an admin account for the /admin panel.
