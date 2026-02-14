@@ -1,6 +1,11 @@
 from django.db import models
 
-# I think the database can be handled here and referenced in views. 
-# When the view is refreshed just query the DB and build the item_list
-# and the view will put it in the display
-page_data = []
+
+class Item(models.Model):
+    name = models.CharField(max_length=29)
+    qty = models.PositiveIntegerField(default=0)
+    created_at = models.DateTimeField(auto_now_add=True)
+    updated_at = models.DateTimeField(auto_now=True)
+
+    def __str__(self):
+        return f"{self.name} (qty: {self.qty})"
