@@ -1,4 +1,5 @@
 from django.shortcuts import render, redirect
+from django.db.models import F
 from .models import Item
 from .constants import ItemConstraints, ErrorMessages
 
@@ -37,8 +38,16 @@ def index(request):
 
         qty, error = validate_item(name, qty_str)
         if error is None:
-            Item.objects.create(name=name, qty=qty)
-            return redirect("index")
+            updated = Item.objects.filter(
+                name=name, qty__lte=ItemConstraints.QTY_MAX - qty
+            ).update(qty=F("qty") + qty)
+            if updated:
+                return redirect("index")
+            if Item.objects.filter(name=name).exists():
+                error = ErrorMessages.QTY_EXCEEDS_MAX
+            else:
+                Item.objects.create(name=name, qty=qty)
+                return redirect("index")
 
     item_list = Item.objects.all()
     display = {
