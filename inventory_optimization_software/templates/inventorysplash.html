@@ -1,32 +1,205 @@
 <!DOCTYPE html>
 <html lang="en">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>{% block title %}iOS Dashboard{% endblock %}</title>
-    <script src="https://cdn.tailwindcss.com"></script>
-</head>
-<body class="bg-gray-50">
+    <head>
+        <meta charset="UTF-8">
+        <meta name="viewport" content="width=device-width, initial-scale=1.0">
+        <title>{% block title %}iOS Dashboard{% endblock %}</title>
+        <script src="https://cdn.tailwindcss.com"></script>
 
-    <header class="bg-blue-100 py-4 px-8 shadow-sm">
-        <h1 class="text-2xl font-semibold text-blue-800">iOS</h1>
-    </header>
 
-    <nav class="bg-white border-b border-gray-200 px-8 py-3">
-        <ul class="flex items-center">
-            <li>
-                <a href="{% url 'add_item' %}" class="bg-blue-500 hover:bg-blue-600 text-white px-4 py-2 rounded-md transition duration-200">
-                    Add
-                </a>
+        <style>
+            body {font-family: Arial, Helvetica, sans-serif;}
+
+            /* The Modal (background) */
+            .modal {
+                display: none; /* Hidden by default */
+                position: fixed; /* Stay in place */
+                z-index: 1; /* Sit on top */
+                padding-top: 100px; /* Location of the box */
+                left: 0;
+                top: 0;
+                width: 100%; /* Full width */
+                height: 100%; /* Full height */
+                overflow: auto; /* Enable scroll if needed */
+                background-color: rgb(0,0,0); /* Fallback color */
+                background-color: rgba(0,0,0,0.4); /* Black w/ opacity */
+            }
+
+            /* Modal Content */
+            .modal-content {
+                position: relative;
+                background-color: #fefefe;
+                margin: auto;
+                padding: 0;
+                border: 1px solid #888;
+                width: 80%;
+                box-shadow: 0 4px 8px 0 rgba(0,0,0,0.2),0 6px 20px 0 rgba(0,0,0,0.19);
+                -webkit-animation-name: animatetop;
+                -webkit-animation-duration: 0.4s;
+                animation-name: animatetop;
+                animation-duration: 0.4s
+            }
+
+            /* Add Animation */
+            @-webkit-keyframes animatetop {
+                from {top:-300px; opacity:0} 
+                to {top:0; opacity:1}
+            }
+
+            @keyframes animatetop {
+                from {top:-300px; opacity:0}
+                to {top:0; opacity:1}
+            }
+
+            /* The Close Button */
+            .close {
+                color: white;
+                float: right;
+                font-size: 28px;
+                font-weight: bold;
+            }
+
+            .close:hover,
+            .close:focus {
+                color: #000;
+                text-decoration: none;
+                cursor: pointer;
+            }
+
+            .modal-header {
+                padding: 2px 16px;
+                background-color: #5cb85c;
+                color: white;
+            }
+
+            .modal-body {padding: 2px 16px;}
+
+            .modal-footer {
+                padding: 2px 16px;
+                background-color: #5cb85c;
+                color: white;
+            }
+
+            .list-container {
+                width: 100%;
+                max-width: 600px; /* Optional: limits width for better readability */
+                padding: 0;
+                margin: 0;
+                list-style-type: none;
+            }
+
+            .list-row {
+                display: flex;
+                justify-content: space-between;
+                padding: 12px 16px;
+                border-bottom: 1px solid #eee;
+                width: 100%;
+                box-sizing: border-box; /* Ensures padding doesn't break the width */
+                }
+
+                 /* Header specific styling */
+                 .list-header {
+                     font-weight: bold;
+                     background-color: #f9f9f9;
+                     border-bottom: 2px solid #ddd;
+                 }
+
+                 /* Column widths for alignment */
+                 .col-name { flex: 2; text-align: left; }
+                 .col-qty  { flex: 1; text-align: center; }
+                 .col-id   { flex: 1; text-align: right; }
+        </style>
+
+
+    </head>
+    <body class="bg-gray-50">
+
+        <header class="bg-blue-100 py-4 px-8 shadow-sm">
+            <h1 class="text-2xl font-semibold text-blue-800">iOS</h1>
+        </header>
+
+        <nav class="bg-white border-b border-gray-200 px-8 py-3">
+            <ul class="flex items-center">
+                <li>
+                    <!-- <a href="{% url 'add_item' %}" class="bg-blue-500 hover:bg-blue-600 text-white px-4 py-2 rounded-md transition duration-200"> -->
+                        <!--     Add -->
+                        <!-- </a> -->
+
+                    <button id="myBtn" class="bg-blue-500 hover:bg-blue-600 text-white px-4 py-2 rounded-md transition duration-200">Add Item</button>
+
+                </li>
+            </ul>
+        </nav>
+
+        <!-- The Modal -->
+        <div id="myModal" class="modal">
+
+            <!-- Modal content -->
+            <div class="modal-content">
+                <div class="modal-header">
+                    <span class="close">&times;</span>
+                    <h2>Add Item Prompt Header</h2>
+                </div>
+                <div class="modal-body">
+                    <form action="" method="post">
+                        {% csrf_token %}
+                        {{ form.as_p }}
+                        <input type="submit" value="Add Item Button">
+                    </form>
+                </div>
+                <div class="modal-footer">
+                    <h3>Add Item Prompt Footer</h3>
+                </div>
+            </div>
+
+        </div>
+        <script>
+            // Get the modal
+            var modal = document.getElementById("myModal");
+
+            // Get the button that opens the modal
+            var btn = document.getElementById("myBtn");
+
+            // Get the <span> element that closes the modal
+            var span = document.getElementsByClassName("close")[0];
+
+            // When the user clicks the button, open the modal 
+            btn.onclick = function() {
+                modal.style.display = "block";
+            }
+
+            // When the user clicks on <span> (x), close the modal
+            span.onclick = function() {
+                modal.style.display = "none";
+            }
+
+            // When the user clicks anywhere outside of the modal, close it
+            window.onclick = function(event) {
+                if (event.target == modal) {
+                    modal.style.display = "none";
+                }
+            }
+        </script>
+        <main class="p-8">
+            {% block content %}
+            <p class="text-gray-600 italic">Welcome! Your content will appear here.</p>
+            {% endblock %}
+        </main>
+
+        <ul class="list-container">
+            <li class="list-row list-header">
+                <span class="col-name">Name</span>
+                <span class="col-qty">Quantity</span>
+                <span class="col-id">ID</span>
             </li>
+            {% for item in item_list %}
+            <li class="list-row">
+                <span class="col-name">{{ item.name }}</span>
+                <span class="col-qty">{{ item.qty }}</span>
+                <span class="col-id">{{ item.uid }}</span>
+            </li>
+            {% endfor %}
         </ul>
-    </nav>
 
-    <main class="p-8">
-        {% block content %}
-        <p class="text-gray-600 italic">Welcome! Your content will appear here.</p>
-        {% endblock %}
-    </main>
-
-</body>
+    </body>
 </html>
