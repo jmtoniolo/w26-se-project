@@ -32,7 +32,10 @@
                 margin: auto;
                 padding: 0;
                 border: 1px solid #888;
-                width: 80%;
+                width: 480px;
+                max-width: 90%;
+                border-radius: 8px;
+                overflow: hidden;
                 box-shadow: 0 4px 8px 0 rgba(0,0,0,0.2),0 6px 20px 0 rgba(0,0,0,0.19);
                 -webkit-animation-name: animatetop;
                 -webkit-animation-duration: 0.4s;
@@ -67,24 +70,18 @@
             }
 
             .modal-header {
-                padding: 2px 16px;
-                background-color: #5cb85c;
+                padding: 12px 16px;
+                background-color: #2563eb;
                 color: white;
             }
 
-            .modal-body {padding: 2px 16px;}
-
-            .modal-footer {
-                padding: 2px 16px;
-                background-color: #5cb85c;
-                color: white;
-            }
+            .modal-body {padding: 16px 16px 24px;}
 
             .list-container {
                 width: 100%;
-                max-width: 600px; /* Optional: limits width for better readability */
+                max-width: 700px;
                 padding: 0;
-                margin: 0;
+                margin: 0 auto;
                 list-style-type: none;
             }
 
@@ -92,22 +89,35 @@
                 display: flex;
                 justify-content: space-between;
                 padding: 12px 16px;
-                border-bottom: 1px solid #eee;
+                border-bottom: 1px solid #e5e7eb;
                 width: 100%;
-                box-sizing: border-box; /* Ensures padding doesn't break the width */
-                }
+                box-sizing: border-box;
+                transition: background-color 0.15s;
+            }
 
-                 /* Header specific styling */
-                 .list-header {
-                     font-weight: bold;
-                     background-color: #f9f9f9;
-                     border-bottom: 2px solid #ddd;
-                 }
+            .list-row:not(.list-header):hover {
+                background-color: #eff6ff;
+            }
 
-                 /* Column widths for alignment */
-                 .col-name { flex: 2; text-align: left; }
-                 .col-qty  { flex: 1; text-align: center; }
-                 .col-id   { flex: 1; text-align: right; }
+            .list-row:not(.list-header):nth-child(even) {
+                background-color: #f9fafb;
+            }
+
+            .list-row:not(.list-header):nth-child(even):hover {
+                background-color: #eff6ff;
+            }
+
+            .list-header {
+                font-weight: 600;
+                background-color: #1e40af;
+                color: white;
+                border-bottom: none;
+                border-radius: 6px 6px 0 0;
+            }
+
+            .col-name { flex: 2; text-align: left; }
+            .col-qty  { flex: 1; text-align: center; }
+            .col-id   { flex: 1; text-align: right; }
         </style>
 
 
@@ -119,17 +129,16 @@
         </header>
 
         <nav class="bg-white border-b border-gray-200 px-8 py-3">
-            <ul class="flex items-center">
+            <ul class="flex items-center gap-3">
                 <li>
                     <button id="myBtn" class="bg-blue-500 hover:bg-blue-600 text-white px-4 py-2 rounded-md transition duration-200">Add Item</button>
                 </li>
                 <li>
                     <form method="POST" action="">
                         {% csrf_token %}
-                        {{ form.as_p }}
                         <input type="bool" name="clear_button" value="clear_button" hidden>
                         <button type="submit"
-                            id="diffbtn" class="bg-blue-500 hover:bg-blue-600 text-white px-4 py-2 rounded-md transition duration-200">Clear Items
+                            id="diffbtn" class="border border-red-500 text-red-500 hover:bg-red-50 px-4 py-2 rounded-md transition duration-200">Clear Items
                         </button>
                     </form>
                 </li>
@@ -143,21 +152,26 @@
             <div class="modal-content">
                 <div class="modal-header">
                     <span class="close">&times;</span>
-                    <h2>Add Item Prompt Header</h2>
+                    <h2>Add New Item</h2>
                 </div>
                 <div class="modal-body">
                     <form action="" method="POST">
                         {% csrf_token %}
-                        {{ form.as_p }}
-                        <label for="itemname">Enter Name:</label>
-                        <input type="text" id="itemname" name="itemname" maxlength="29" pattern="[ -~]{1,29}" title="ASCII characters only, max 29" required>
-                        <label for="newitemqty">Enter Qty:</label>
-                        <input type="number" id="itemquantity" name="itemquantity" min="0" max="999999999" step="1" required>
-                        <input type="submit" value="AddItem_ClickME">
+                        <div class="mb-4">
+                            <label for="itemname" class="block text-sm font-medium text-gray-700 mb-1">Item Name</label>
+                            <input type="text" id="itemname" name="itemname" maxlength="29" pattern="[ -~]{1,29}" title="ASCII characters only, max 29" required
+                                class="w-full border border-gray-300 rounded-md px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500">
+                        </div>
+                        <div class="mb-4">
+                            <label for="itemquantity" class="block text-sm font-medium text-gray-700 mb-1">Quantity</label>
+                            <input type="number" id="itemquantity" name="itemquantity" min="0" max="999999999" step="1" required
+                                class="w-full border border-gray-300 rounded-md px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500">
+                        </div>
+                        <button type="submit"
+                            class="w-full bg-blue-500 hover:bg-blue-600 text-white font-medium px-4 py-2 rounded-md transition duration-200">
+                            Add Item
+                        </button>
                     </form>
-                </div>
-                <div class="modal-footer">
-                    <h3>Add Item Prompt Footer</h3>
                 </div>
             </div>
 
@@ -190,31 +204,34 @@
             }
         </script>
         <main class="p-8">
-            {% block content %}
-            <p class="text-gray-600 italic">Welcome! Your content will appear here.</p>
-            {% endblock %}
+            {% if error %}
+            <div class="bg-red-100 border border-red-400 text-red-700 px-4 py-3 rounded max-w-[700px] mx-auto mb-4" role="alert">
+                {{ error }}
+            </div>
+            {% endif %}
+
+            {% if item_list %}
+            <ul class="list-container">
+                <li class="list-row list-header">
+                    <span class="col-name">Name</span>
+                    <span class="col-qty">Quantity</span>
+                    <span class="col-id">ID</span>
+                </li>
+                {% for item in item_list %}
+                <li class="list-row">
+                    <span class="col-name">{{ item.name }}</span>
+                    <span class="col-qty">{{ item.qty }}</span>
+                    <span class="col-id">{{ item.id }}</span>
+                </li>
+                {% endfor %}
+            </ul>
+            {% else %}
+            <div class="text-center text-gray-500 py-12 max-w-[700px] mx-auto">
+                <p class="text-lg">No items in inventory.</p>
+                <p class="mt-1">Click <strong>Add Item</strong> to get started.</p>
+            </div>
+            {% endif %}
         </main>
-
-        {% if error %}
-        <div class="bg-red-100 border border-red-400 text-red-700 px-4 py-3 rounded mx-8 mb-4" role="alert">
-            {{ error }}
-        </div>
-        {% endif %}
-
-        <ul class="list-container">
-            <li class="list-row list-header">
-                <span class="col-name">Name</span>
-                <span class="col-qty">Quantity</span>
-                <span class="col-id">ID</span>
-            </li>
-            {% for item in item_list %}
-            <li class="list-row">
-                <span class="col-name">{{ item.name }}</span>
-                <span class="col-qty">{{ item.qty }}</span>
-                <span class="col-id">{{ item.id }}</span>
-            </li>
-            {% endfor %}
-        </ul>
 
     </body>
 </html>
