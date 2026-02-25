@@ -1,0 +1,66 @@
+<header class="bg-blue-100 py-4 px-8 shadow-sm">
+    <h1 class="text-2xl font-semibold text-blue-800">iOS</h1>
+</header>
+
+<nav class="bg-white border-b border-gray-200 px-8 py-4">
+    <div class="container-fluid">
+        <div class="row align-items-center">
+            <!-- Left Column: Add Item and Filters buttons -->
+            <div class="col-auto d-flex gap-2">
+                <button id="myBtn" class="bg-blue-500 hover:bg-blue-600 text-white px-4 py-2 rounded-md transition duration-200">Add Item</button>
+                <button id="filterToggle" class="bg-gray-500 hover:bg-gray-600 text-white px-4 py-2 rounded-md transition duration-200">⚙ Filters</button>
+            </div>
+
+            <!-- Center Column: Search Bar -->
+            <div class="col d-flex justify-content-center px-4">
+                <input 
+                    type="text" 
+                    id="search" 
+                    placeholder="Search items..."
+                    class="form-control"
+                    style="max-width: 400px;">
+            </div>
+
+            <!-- Right Column: Clear Items button -->
+            <div class="col-auto">
+                <form method="POST" action="" style="display: inline;">
+                    {% csrf_token %}
+                    <input type="bool" name="clear_button" value="clear_button" hidden>
+                    <button type="submit"
+                        id="diffbtn" class="border border-red-500 text-red-500 hover:bg-red-50 px-4 py-2 rounded-md transition duration-200">Clear Items
+                    </button>
+                </form>
+            </div>
+        </div>
+    </div>
+</nav>
+
+<!-- The Modal -->
+<div id="myModal" class="modal">
+    <!-- Modal content -->
+    <div class="modal-content">
+        <div class="modal-header">
+            <span class="close">&times;</span>
+            <h2>Add New Item</h2>
+        </div>
+        <div class="modal-body">
+            <form action="" method="POST">
+                {% csrf_token %}
+                <div class="mb-4">
+                    <label for="itemname" class="block text-sm font-medium text-gray-700 mb-1">Item Name</label>
+                    <input type="text" id="itemname" name="itemname" maxlength="29" pattern="[ -~]{1,29}" title="ASCII characters only, max 29" required
+                        class="w-full border border-gray-300 rounded-md px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500">
+                </div>
+                <div class="mb-4">
+                    <label for="itemquantity" class="block text-sm font-medium text-gray-700 mb-1">Quantity</label>
+                    <input type="number" id="itemquantity" name="itemquantity" min="0" max="999999999" step="1" required
+                        class="w-full border border-gray-300 rounded-md px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500">
+                </div>
+                <button type="submit"
+                    class="w-full bg-blue-500 hover:bg-blue-600 text-white font-medium px-4 py-2 rounded-md transition duration-200">
+                    Add Item
+                </button>
+            </form>
+        </div>
+    </div>
+</div>
