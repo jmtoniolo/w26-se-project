@@ -5,7 +5,7 @@
         <meta name="viewport" content="width=device-width, initial-scale=1.0">
         <title>{% block title %}iOS Dashboard{% endblock %}</title>
         <script src="https://cdn.tailwindcss.com"></script>
-
+        <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
 
         <style>
             body {font-family: Arial, Helvetica, sans-serif;}
@@ -128,24 +128,37 @@
             <h1 class="text-2xl font-semibold text-blue-800">iOS</h1>
         </header>
 
-        <nav class="bg-white border-b border-gray-200 px-8 py-3">
-            <ul class="flex items-center gap-3">
-                <li>
-                    <button id="myBtn" class="bg-blue-500 hover:bg-blue-600 text-white px-4 py-2 rounded-md transition duration-200">Add Item</button>
-                </li>
-                <li>
-                    <button id="filterToggle" class="bg-gray-500 hover:bg-gray-600 text-white px-4 py-2 rounded-md transition duration-200">⚙ Filters</button>
-                </li>
-                <li>
-                    <form method="POST" action="">
-                        {% csrf_token %}
-                        <input type="bool" name="clear_button" value="clear_button" hidden>
-                        <button type="submit"
-                            id="diffbtn" class="border border-red-500 text-red-500 hover:bg-red-50 px-4 py-2 rounded-md transition duration-200">Clear Items
-                        </button>
-                    </form>
-                </li>
-            </ul>
+        <nav class="bg-white border-b border-gray-200 px-8 py-4">
+            <div class="container-fluid">
+                <div class="row align-items-center">
+                    <!-- Left Column: Add Item and Filters buttons -->
+                    <div class="col-auto d-flex gap-2">
+                        <button id="myBtn" class="bg-blue-500 hover:bg-blue-600 text-white px-4 py-2 rounded-md transition duration-200">Add Item</button>
+                        <button id="filterToggle" class="bg-gray-500 hover:bg-gray-600 text-white px-4 py-2 rounded-md transition duration-200">⚙ Filters</button>
+                    </div>
+
+                    <!-- Center Column: Search Bar -->
+                    <div class="col d-flex justify-content-center px-4">
+                        <input 
+                            type="text" 
+                            id="search" 
+                            placeholder="Search items..."
+                            class="form-control"
+                            style="max-width: 400px;">
+                    </div>
+
+                    <!-- Right Column: Clear Items button -->
+                    <div class="col-auto">
+                        <form method="POST" action="" style="display: inline;">
+                            {% csrf_token %}
+                            <input type="bool" name="clear_button" value="clear_button" hidden>
+                            <button type="submit"
+                                id="diffbtn" class="border border-red-500 text-red-500 hover:bg-red-50 px-4 py-2 rounded-md transition duration-200">Clear Items
+                            </button>
+                        </form>
+                    </div>
+                </div>
+            </div>
         </nav>
 
         <!-- The Modal -->
@@ -207,24 +220,12 @@
             }
         </script>
         <main class="p-8">
-            <!-- Search and Filter Panel -->
+            <!-- Filters Section (Collapsible) -->
             <div class="max-w-[700px] mx-auto mb-6">
-                <div class="space-y-4">
-                    <!-- Search Input -->
-                    <div>
-                        <label for="search" class="block text-sm font-medium text-gray-700 mb-2">Search by Name</label>
-                        <input 
-                            type="text" 
-                            id="search" 
-                            placeholder="Search items..."
-                            class="w-full border border-gray-300 rounded-md px-4 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500">
-                    </div>
-
-                    <!-- Filters Section (Collapsible) -->
-                    <div id="filterPanel" class="hidden bg-gray-50 border border-gray-200 rounded-md p-4 space-y-4">
-                        <div class="grid grid-cols-2 gap-4">
-                            <div>
-                                <label for="min_qty" class="block text-sm font-medium text-gray-700 mb-2">Min Quantity</label>
+                <div id="filterPanel" class="hidden bg-gray-50 border border-gray-200 rounded-md p-4 space-y-4">
+                    <div class="grid grid-cols-2 gap-4">
+                        <div>
+                            <label for="min_qty" class="block text-sm font-medium text-gray-700 mb-2">Min Quantity</label>
                                 <input 
                                     type="number" 
                                     id="min_qty" 
@@ -250,7 +251,6 @@
                             </button>
                         </div>
                     </div>
-                </div>
             </div>
 
             {% if error %}
@@ -385,6 +385,7 @@
             // Initial render - show all items on page load
             applyFilters();
         </script>
+        <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
 
     </body>
 </html>
