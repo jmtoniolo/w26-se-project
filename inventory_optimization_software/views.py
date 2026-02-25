@@ -61,4 +61,4 @@ def index(request):
         "items_json": items_json,
         "error": error,
     }
-    return render(request, "inventorysplash.html", display)
+    return render(request, "inventorysplash/inventorysplash.html", display)
