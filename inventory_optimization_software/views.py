@@ -1,5 +1,6 @@
 from django.shortcuts import render, redirect
 from django.db.models import F
+from django.http import JsonResponse
 from .models import Item
 from .constants import ItemConstraints, ErrorMessages
 
@@ -49,9 +50,15 @@ def index(request):
                 Item.objects.create(name=name, qty=qty)
                 return redirect("index")
 
-    item_list = Item.objects.all()
+    # Always get all items for client-side filtering
+    item_list = Item.objects.all().order_by("name")
+    
+    # Convert items to JSON for client-side filtering
+    items_json = [{"id": item.id, "name": item.name, "qty": item.qty} for item in item_list]
+
     display = {
         "item_list": item_list,
+        "items_json": items_json,
         "error": error,
     }
     return render(request, "inventorysplash.html", display)

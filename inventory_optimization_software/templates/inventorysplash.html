@@ -134,6 +134,9 @@
                     <button id="myBtn" class="bg-blue-500 hover:bg-blue-600 text-white px-4 py-2 rounded-md transition duration-200">Add Item</button>
                 </li>
                 <li>
+                    <button id="filterToggle" class="bg-gray-500 hover:bg-gray-600 text-white px-4 py-2 rounded-md transition duration-200">⚙ Filters</button>
+                </li>
+                <li>
                     <form method="POST" action="">
                         {% csrf_token %}
                         <input type="bool" name="clear_button" value="clear_button" hidden>
@@ -204,34 +207,184 @@
             }
         </script>
         <main class="p-8">
+            <!-- Search and Filter Panel -->
+            <div class="max-w-[700px] mx-auto mb-6">
+                <div class="space-y-4">
+                    <!-- Search Input -->
+                    <div>
+                        <label for="search" class="block text-sm font-medium text-gray-700 mb-2">Search by Name</label>
+                        <input 
+                            type="text" 
+                            id="search" 
+                            placeholder="Search items..."
+                            class="w-full border border-gray-300 rounded-md px-4 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500">
+                    </div>
+
+                    <!-- Filters Section (Collapsible) -->
+                    <div id="filterPanel" class="hidden bg-gray-50 border border-gray-200 rounded-md p-4 space-y-4">
+                        <div class="grid grid-cols-2 gap-4">
+                            <div>
+                                <label for="min_qty" class="block text-sm font-medium text-gray-700 mb-2">Min Quantity</label>
+                                <input 
+                                    type="number" 
+                                    id="min_qty" 
+                                    min="0"
+                                    placeholder="0"
+                                    class="w-full border border-gray-300 rounded-md px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500">
+                            </div>
+                            <div>
+                                <label for="max_qty" class="block text-sm font-medium text-gray-700 mb-2">Max Quantity</label>
+                                <input 
+                                    type="number" 
+                                    id="max_qty" 
+                                    min="0"
+                                    placeholder="999999999"
+                                    class="w-full border border-gray-300 rounded-md px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500">
+                            </div>
+                        </div>
+                        <div>
+                            <button 
+                                id="clearFiltersBtn"
+                                class="w-full bg-gray-300 hover:bg-gray-400 text-gray-700 font-medium px-4 py-2 rounded-md transition duration-200">
+                                Clear Filters
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
             {% if error %}
             <div class="bg-red-100 border border-red-400 text-red-700 px-4 py-3 rounded max-w-[700px] mx-auto mb-4" role="alert">
                 {{ error }}
             </div>
             {% endif %}
 
-            {% if item_list %}
-            <ul class="list-container">
+            <div class="max-w-[700px] mx-auto mb-4">
+                <p class="text-sm text-gray-600">
+                    Showing <span id="itemCount" class="font-semibold">{{ item_list|length }}</span> 
+                    <span id="itemLabel">item{{ item_list|length|pluralize }}</span>
+                </p>
+            </div>
+
+            <ul class="list-container" id="itemsList">
                 <li class="list-row list-header">
                     <span class="col-name">Name</span>
                     <span class="col-qty">Quantity</span>
                     <span class="col-id">ID</span>
                 </li>
                 {% for item in item_list %}
-                <li class="list-row">
+                <li class="list-row item-row" data-name="{{ item.name }}" data-qty="{{ item.qty }}" data-id="{{ item.id }}">
                     <span class="col-name">{{ item.name }}</span>
                     <span class="col-qty">{{ item.qty }}</span>
                     <span class="col-id">{{ item.id }}</span>
                 </li>
                 {% endfor %}
             </ul>
-            {% else %}
-            <div class="text-center text-gray-500 py-12 max-w-[700px] mx-auto">
+
+            {% if not item_list %}
+            <div id="emptyState" class="text-center text-gray-500 py-12 max-w-[700px] mx-auto">
                 <p class="text-lg">No items in inventory.</p>
                 <p class="mt-1">Click <strong>Add Item</strong> to get started.</p>
             </div>
             {% endif %}
+
+            <!-- Hidden element to store items JSON for client-side filtering -->
+            <script type="application/json" id="allItemsData">
+            {{ items_json|safe }}
+            </script>
         </main>
+
+        <script>
+            // DOM elements
+            const searchInput = document.getElementById('search');
+            const minQtyInput = document.getElementById('min_qty');
+            const maxQtyInput = document.getElementById('max_qty');
+            const filterToggle = document.getElementById('filterToggle');
+            const filterPanel = document.getElementById('filterPanel');
+            const clearFiltersBtn = document.getElementById('clearFiltersBtn');
+            const itemsList = document.getElementById('itemsList');
+            const itemCount = document.getElementById('itemCount');
+            const itemLabel = document.getElementById('itemLabel');
+            const emptyState = document.getElementById('emptyState');
+
+            // Filter toggle functionality
+            filterToggle.addEventListener('click', function(e) {
+                e.preventDefault();
+                filterPanel.classList.toggle('hidden');
+                filterToggle.classList.toggle('bg-blue-500');
+                filterToggle.classList.toggle('bg-gray-500');
+                filterToggle.classList.toggle('hover:bg-blue-600');
+                filterToggle.classList.toggle('hover:bg-gray-600');
+            });
+
+            // Apply filters function - filters items based on search and quantity criteria
+            function applyFilters() {
+                const searchTerm = searchInput.value.trim().toLowerCase();
+                const minQty = minQtyInput.value ? parseInt(minQtyInput.value) : 0;
+                const maxQty = maxQtyInput.value ? parseInt(maxQtyInput.value) : Infinity;
+
+                // Get all item rows
+                const itemRows = itemsList.querySelectorAll('.item-row');
+                let visibleCount = 0;
+
+                itemRows.forEach(row => {
+                    const name = row.dataset.name.toLowerCase();
+                    const qty = parseInt(row.dataset.qty);
+
+                    // Check if item matches all filters
+                    const matchesSearch = name.includes(searchTerm);
+                    const matchesQtyRange = qty >= minQty && qty <= maxQty;
+
+                    if (matchesSearch && matchesQtyRange) {
+                        row.style.display = '';
+                        visibleCount++;
+                    } else {
+                        row.style.display = 'none';
+                    }
+                });
+
+                // Update item count and label
+                itemCount.textContent = visibleCount;
+                const pluralForm = visibleCount === 1 ? 'item' : 'items';
+                itemLabel.textContent = pluralForm;
+
+                // Show/hide empty state and list
+                if (visibleCount === 0) {
+                    emptyState.style.display = 'block';
+                    itemsList.style.display = 'none';
+                    itemCount.parentElement.style.display = 'none';
+                } else {
+                    emptyState.style.display = 'none';
+                    itemsList.style.display = '';
+                    itemCount.parentElement.style.display = 'block';
+                }
+            }
+
+            // Search input event listener - triggers on keyup and checks for minimum 3 characters
+            searchInput.addEventListener('keyup', function(event) {
+                const currentValue = searchInput.value.trim();
+                
+                // Only filter if we have 0 or 3+ characters (allows clearing filter)
+                if (currentValue.length === 0 || currentValue.length >= 3) {
+                    applyFilters();
+                }
+            });
+
+            // Quantity filter event listeners - trigger on any change
+            minQtyInput.addEventListener('input', applyFilters);
+            maxQtyInput.addEventListener('input', applyFilters);
+
+            // Clear filters button
+            clearFiltersBtn.addEventListener('click', function() {
+                searchInput.value = '';
+                minQtyInput.value = '';
+                maxQtyInput.value = '';
+                applyFilters();
+            });
+
+            // Initial render - show all items on page load
+            applyFilters();
+        </script>
 
     </body>
 </html>
