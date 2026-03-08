@@ -13,9 +13,9 @@ classDiagram
         +PositiveIntegerField reorder_level
         +DateTimeField created_at
         +DateTimeField updated_at
+        +bool is_out_of_stock
+        +bool is_low_stock
         +__str__() String
-        +is_out_of_stock() bool
-        +is_low_stock() bool
     }
 
     class ItemConstraints {
@@ -53,8 +53,8 @@ classDiagram
         +PositiveIntegerField reorder_level
         +DateTimeField created_at
         +DateTimeField updated_at
-        +is_out_of_stock() bool
-        +is_low_stock() bool
+        +bool is_out_of_stock
+        +bool is_low_stock
     }
 
     class ItemConstraints {
@@ -108,7 +108,7 @@ Shows how all components connect end-to-end. The browser sends requests to Djang
 classDiagram
     direction TB
 
-    class DjangoModel {
+    class models_Model {
         <<abstract>>
     }
 
@@ -119,9 +119,9 @@ classDiagram
         +PositiveIntegerField reorder_level
         +DateTimeField created_at
         +DateTimeField updated_at
+        +bool is_out_of_stock
+        +bool is_low_stock
         +__str__() String
-        +is_out_of_stock() bool
-        +is_low_stock() bool
     }
 
     class ItemConstraints {
@@ -185,7 +185,7 @@ classDiagram
         +inventory_optimization_software_item
     }
 
-    DjangoModel <|-- Item
+    models_Model <|-- Item
     Item --> ItemConstraints : uses
     views_py --> Item : CRUD operations
     views_py --> ItemConstraints : validates against
