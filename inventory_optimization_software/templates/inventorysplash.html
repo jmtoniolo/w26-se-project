@@ -1,0 +1,506 @@
+<!DOCTYPE html>
+<html lang="en">
+    <head>
+        <meta charset="UTF-8">
+        <meta name="viewport" content="width=device-width, initial-scale=1.0">
+        <title>{% block title %}iOS Dashboard{% endblock %}</title>
+        <script src="https://cdn.tailwindcss.com"></script>
+
+        <style>
+            body {font-family: Arial, Helvetica, sans-serif;}
+
+            .modal {
+                display: none;
+                position: fixed;
+                z-index: 10;
+                padding-top: 100px;
+                left: 0;
+                top: 0;
+                width: 100%;
+                height: 100%;
+                overflow: auto;
+                background-color: rgba(0,0,0,0.4);
+            }
+
+            .modal-content {
+                position: relative;
+                background-color: #fefefe;
+                margin: auto;
+                padding: 0;
+                border: 1px solid #888;
+                width: 480px;
+                max-width: 90%;
+                border-radius: 8px;
+                overflow: hidden;
+                box-shadow: 0 4px 8px 0 rgba(0,0,0,0.2),0 6px 20px 0 rgba(0,0,0,0.19);
+                animation-name: animatetop;
+                animation-duration: 0.4s;
+            }
+
+            @keyframes animatetop {
+                from {top:-300px; opacity:0}
+                to {top:0; opacity:1}
+            }
+
+            .close {
+                color: white;
+                float: right;
+                font-size: 28px;
+                font-weight: bold;
+            }
+
+            .close:hover,
+            .close:focus {
+                color: #000;
+                text-decoration: none;
+                cursor: pointer;
+            }
+
+            .modal-header {
+                padding: 12px 16px;
+                background-color: #2563eb;
+                color: white;
+            }
+
+            .modal-body {padding: 16px 16px 24px;}
+
+            .list-container {
+                width: 100%;
+                max-width: 800px;
+                padding: 0;
+                margin: 0 auto;
+                list-style-type: none;
+            }
+
+            .list-row {
+                display: flex;
+                align-items: center;
+                padding: 10px 16px;
+                border-bottom: 1px solid #e5e7eb;
+                width: 100%;
+                box-sizing: border-box;
+                transition: background-color 0.15s;
+            }
+
+            .list-row:not(.list-header):hover {
+                background-color: #eff6ff;
+            }
+
+            .list-row:not(.list-header):nth-child(even) {
+                background-color: #f9fafb;
+            }
+
+            .list-row:not(.list-header):nth-child(even):hover {
+                background-color: #eff6ff;
+            }
+
+            .list-header {
+                font-weight: 600;
+                background-color: #1e40af;
+                color: white;
+                border-bottom: none;
+                border-radius: 6px 6px 0 0;
+            }
+
+            .col-name   { flex: 2; text-align: left; }
+            .col-qty    { flex: 1; text-align: center; }
+            .col-id     { flex: 0.7; text-align: center; }
+            .col-status { flex: 1; text-align: center; }
+            .col-actions { flex: 1.5; text-align: right; display: flex; align-items: center; justify-content: flex-end; gap: 4px; }
+
+            /* Tooltip styles */
+            .tooltip {
+                position: relative;
+                display: inline-block;
+                cursor: help;
+            }
+
+            .tooltip .tooltip-text {
+                visibility: hidden;
+                background-color: #1f2937;
+                color: #fff;
+                text-align: center;
+                border-radius: 4px;
+                padding: 6px 10px;
+                position: absolute;
+                z-index: 20;
+                bottom: 125%;
+                left: 50%;
+                transform: translateX(-50%);
+                white-space: nowrap;
+                font-size: 12px;
+                opacity: 0;
+                transition: opacity 0.2s;
+            }
+
+            .tooltip:hover .tooltip-text {
+                visibility: visible;
+                opacity: 1;
+            }
+        </style>
+    </head>
+    <body class="bg-gray-50">
+
+        <!-- FR-14: Parent Overlay - permanently displayed UI -->
+        <header class="bg-blue-100 py-4 px-8 shadow-sm">
+            <h1 class="text-2xl font-semibold text-blue-800">iOS</h1>
+        </header>
+
+        <!-- FR-14/USAB-2: Parent Overlay - always visible nav bar -->
+        <nav class="bg-white border-b border-gray-200 px-8 py-3 sticky top-0 z-5">
+            <div class="flex flex-wrap items-center gap-3">
+                <!-- FR-16: PO New Item Button -->
+                <div class="tooltip">
+                    <button id="addItemBtn" class="bg-blue-500 hover:bg-blue-600 text-white px-4 py-2 rounded-md transition duration-200">Add Item</button>
+                    <span class="tooltip-text">Create a new inventory item (FR-9)</span>
+                </div>
+
+                <div class="tooltip">
+                    <form method="POST" action="" style="display:inline;">
+                        {% csrf_token %}
+                        <input type="hidden" name="clear_button" value="clear_button">
+                        <button type="submit"
+                            class="border border-red-500 text-red-500 hover:bg-red-50 px-4 py-2 rounded-md transition duration-200">Clear Items
+                        </button>
+                    </form>
+                    <span class="tooltip-text">Remove all items from inventory</span>
+                </div>
+
+                <!-- FR-17: PO Search Bar -->
+                <form method="GET" action="" class="flex items-center gap-2 ml-auto">
+                    <div class="tooltip">
+                        <input type="text" name="search" value="{{ search_query }}" placeholder="Search by name..."
+                            class="border border-gray-300 rounded-md px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 w-48">
+                        <span class="tooltip-text">Search items by name (FR-17)</span>
+                    </div>
+
+                    <!-- FR-21: Sorting -->
+                    <div class="tooltip">
+                        <select name="sort" class="border border-gray-300 rounded-md px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500">
+                            <option value="" {% if sort_by == "" %}selected{% endif %}>Sort by...</option>
+                            <option value="name_asc" {% if sort_by == "name_asc" %}selected{% endif %}>Name A-Z</option>
+                            <option value="name_desc" {% if sort_by == "name_desc" %}selected{% endif %}>Name Z-A</option>
+                            <option value="qty_asc" {% if sort_by == "qty_asc" %}selected{% endif %}>Qty Low-High</option>
+                            <option value="qty_desc" {% if sort_by == "qty_desc" %}selected{% endif %}>Qty High-Low</option>
+                            <option value="id_asc" {% if sort_by == "id_asc" %}selected{% endif %}>ID Ascending</option>
+                            <option value="id_desc" {% if sort_by == "id_desc" %}selected{% endif %}>ID Descending</option>
+                        </select>
+                        <span class="tooltip-text">Sort inventory items (FR-21)</span>
+                    </div>
+
+                    <!-- FR-15: PO Filtering -->
+                    <div class="tooltip">
+                        <select name="filter" class="border border-gray-300 rounded-md px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500">
+                            <option value="" {% if filter_by == "" %}selected{% endif %}>All Items</option>
+                            <option value="low_stock" {% if filter_by == "low_stock" %}selected{% endif %}>Low Stock Only</option>
+                        </select>
+                        <span class="tooltip-text">Filter items by status (FR-15)</span>
+                    </div>
+
+                    <button type="submit" class="bg-gray-500 hover:bg-gray-600 text-white px-4 py-2 rounded-md transition duration-200">Apply</button>
+
+                    {% if search_query or sort_by or filter_by %}
+                    <a href="{% url 'index' %}" class="text-gray-500 hover:text-gray-700 underline text-sm">Reset</a>
+                    {% endif %}
+                </form>
+
+                <!-- USAB-4: Help icon -->
+                <div class="tooltip">
+                    <button type="button" class="text-gray-400 hover:text-blue-500 ml-2" aria-label="Help">
+                        <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                d="M8.228 9c.549-1.165 2.03-2 3.772-2 2.21 0 4 1.343 4 3 0 1.4-1.278 2.575-3.006 2.907-.542.104-.994.54-.994 1.093m0 3h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/>
+                        </svg>
+                    </button>
+                    <span class="tooltip-text" style="width: 260px; white-space: normal; left: auto; right: 0; transform: none; bottom: auto; top: 125%;">
+                        Use "Add Item" to create items. Click +/- to adjust quantity.
+                        Click the gear icon on a tile to edit or delete an item.
+                        Use Search, Sort, and Filter to find items.
+                    </span>
+                </div>
+            </div>
+        </nav>
+
+        <!-- Add Item Modal (FR-9) -->
+        <div id="addModal" class="modal">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <span class="close" data-modal="addModal">&times;</span>
+                    <h2>Add New Item</h2>
+                </div>
+                <div class="modal-body">
+                    <form action="" method="POST">
+                        {% csrf_token %}
+                        <div class="mb-4">
+                            <label for="itemname" class="block text-sm font-medium text-gray-700 mb-1">
+                                Item Name
+                                <span class="tooltip" style="margin-left:4px;">
+                                    <svg class="w-4 h-4 inline text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>
+                                    <span class="tooltip-text">ASCII characters only, max 29 characters</span>
+                                </span>
+                            </label>
+                            <input type="text" id="itemname" name="itemname" maxlength="29" pattern="[ -~]{1,29}" title="ASCII characters only, max 29" required
+                                class="w-full border border-gray-300 rounded-md px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500">
+                        </div>
+                        <div class="mb-4">
+                            <label for="itemquantity" class="block text-sm font-medium text-gray-700 mb-1">
+                                Quantity
+                                <span class="tooltip" style="margin-left:4px;">
+                                    <svg class="w-4 h-4 inline text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>
+                                    <span class="tooltip-text">Whole number between 0 and 999,999,999</span>
+                                </span>
+                            </label>
+                            <input type="number" id="itemquantity" name="itemquantity" min="0" max="999999999" step="1" required
+                                class="w-full border border-gray-300 rounded-md px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500">
+                        </div>
+                        <button type="submit"
+                            class="w-full bg-blue-500 hover:bg-blue-600 text-white font-medium px-4 py-2 rounded-md transition duration-200">
+                            Save
+                        </button>
+                    </form>
+                </div>
+            </div>
+        </div>
+
+        <!-- Edit Item Modal (FR-3, FR-4) -->
+        <div id="editModal" class="modal">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <span class="close" data-modal="editModal">&times;</span>
+                    <h2>Edit Item</h2>
+                </div>
+                <div class="modal-body">
+                    <form id="editForm" method="POST" action="">
+                        {% csrf_token %}
+                        <!-- FR-5: ID is displayed but not editable -->
+                        <div class="mb-4">
+                            <label class="block text-sm font-medium text-gray-700 mb-1">
+                                Unique ID
+                                <span class="tooltip" style="margin-left:4px;">
+                                    <svg class="w-4 h-4 inline text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>
+                                    <span class="tooltip-text">Unique ID cannot be changed (FR-5)</span>
+                                </span>
+                            </label>
+                            <input type="text" id="editItemId" disabled
+                                class="w-full border border-gray-200 bg-gray-100 rounded-md px-3 py-2 text-gray-500 cursor-not-allowed">
+                        </div>
+                        <div class="mb-4">
+                            <label for="editItemName" class="block text-sm font-medium text-gray-700 mb-1">
+                                Item Name
+                                <span class="tooltip" style="margin-left:4px;">
+                                    <svg class="w-4 h-4 inline text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>
+                                    <span class="tooltip-text">ASCII characters only, max 29 characters</span>
+                                </span>
+                            </label>
+                            <input type="text" id="editItemName" name="itemname" maxlength="29" pattern="[ -~]{1,29}" title="ASCII characters only, max 29" required
+                                class="w-full border border-gray-300 rounded-md px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500">
+                        </div>
+                        <div class="mb-4">
+                            <label for="editItemQty" class="block text-sm font-medium text-gray-700 mb-1">
+                                Quantity
+                                <span class="tooltip" style="margin-left:4px;">
+                                    <svg class="w-4 h-4 inline text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>
+                                    <span class="tooltip-text">Whole number between 0 and 999,999,999</span>
+                                </span>
+                            </label>
+                            <input type="number" id="editItemQty" name="itemquantity" min="0" max="999999999" step="1" required
+                                class="w-full border border-gray-300 rounded-md px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500">
+                        </div>
+                        <div class="mb-4">
+                            <label for="editReorderLevel" class="block text-sm font-medium text-gray-700 mb-1">
+                                Reorder Level
+                                <span class="tooltip" style="margin-left:4px;">
+                                    <svg class="w-4 h-4 inline text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>
+                                    <span class="tooltip-text">Item flagged as "Low Stock" when qty is at or below this level</span>
+                                </span>
+                            </label>
+                            <input type="number" id="editReorderLevel" name="reorder_level" min="0" max="999999999" step="1" value="0"
+                                class="w-full border border-gray-300 rounded-md px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500">
+                        </div>
+                        <div class="flex gap-3">
+                            <button type="submit"
+                                class="flex-1 bg-blue-500 hover:bg-blue-600 text-white font-medium px-4 py-2 rounded-md transition duration-200">
+                                Update
+                            </button>
+                            <button type="button" id="editDeleteBtn"
+                                class="flex-1 bg-red-500 hover:bg-red-600 text-white font-medium px-4 py-2 rounded-md transition duration-200">
+                                Delete
+                            </button>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+
+        <!-- Delete Confirmation Modal (FR-10) -->
+        <div id="deleteModal" class="modal">
+            <div class="modal-content">
+                <div class="modal-header" style="background-color: #dc2626;">
+                    <span class="close" data-modal="deleteModal">&times;</span>
+                    <h2>Confirm Delete</h2>
+                </div>
+                <div class="modal-body">
+                    <p class="mb-4 text-gray-700">Are you sure you want to delete <strong id="deleteItemName"></strong>? This action cannot be undone.</p>
+                    <form id="deleteForm" method="POST" action="">
+                        {% csrf_token %}
+                        <div class="flex gap-3">
+                            <button type="submit"
+                                class="flex-1 bg-red-500 hover:bg-red-600 text-white font-medium px-4 py-2 rounded-md transition duration-200">
+                                Delete
+                            </button>
+                            <button type="button" class="flex-1 border border-gray-300 hover:bg-gray-50 text-gray-700 font-medium px-4 py-2 rounded-md transition duration-200"
+                                onclick="closeModal('deleteModal')">
+                                Cancel
+                            </button>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+
+        <main class="p-8">
+            {% if error %}
+            <div id="toast" class="bg-red-100 border border-red-400 text-red-700 px-4 py-3 rounded max-w-[800px] mx-auto mb-4 transition-opacity duration-500" role="alert">
+                {{ error }}
+            </div>
+            <script>
+                setTimeout(function() {
+                    var toast = document.getElementById("toast");
+                    if (toast) {
+                        toast.style.opacity = "0";
+                        setTimeout(function() { toast.remove(); }, 500);
+                    }
+                }, 4000);
+            </script>
+            {% endif %}
+
+            {% if item_list %}
+            <ul class="list-container">
+                <li class="list-row list-header">
+                    <span class="col-name">Name</span>
+                    <span class="col-qty">Quantity</span>
+                    <span class="col-id">ID</span>
+                    <span class="col-status">Status</span>
+                    <span class="col-actions">Actions</span>
+                </li>
+                {% for item in item_list %}
+                <li class="list-row">
+                    <span class="col-name">{{ item.name }}</span>
+                    <span class="col-qty">{{ item.qty }}</span>
+                    <span class="col-id">{{ item.id }}</span>
+                    <!-- FR-19: Low Stock Detection -->
+                    <span class="col-status">
+                        {% if item.is_out_of_stock %}
+                        <span class="inline-block bg-gray-200 text-gray-700 text-xs font-semibold px-2 py-1 rounded tooltip">
+                            Out of Stock
+                            <span class="tooltip-text">Qty is 0</span>
+                        </span>
+                        {% elif item.is_low_stock %}
+                        <span class="inline-block bg-red-100 text-red-700 text-xs font-semibold px-2 py-1 rounded tooltip">
+                            Low Stock
+                            <span class="tooltip-text">Qty ({{ item.qty }}) is at or below reorder level ({{ item.reorder_level }})</span>
+                        </span>
+                        {% else %}
+                        <span class="inline-block bg-green-100 text-green-700 text-xs font-semibold px-2 py-1 rounded">
+                            In Stock
+                        </span>
+                        {% endif %}
+                    </span>
+                    <span class="col-actions">
+                        <!-- FR-6 / FR-11: Increment/Decrement buttons -->
+                        <form method="POST" action="{% url 'decrement_item' item.id %}" style="display:inline;">
+                            {% csrf_token %}
+                            <button type="submit" {% if item.qty <= 0 %}disabled{% endif %}
+                                class="w-8 h-8 rounded {% if item.qty <= 0 %}bg-gray-200 text-gray-400 cursor-not-allowed{% else %}bg-yellow-100 hover:bg-yellow-200 text-yellow-700{% endif %} font-bold text-lg leading-none transition duration-200"
+                                title="Decrease quantity by 1">
+                                -
+                            </button>
+                        </form>
+                        <form method="POST" action="{% url 'increment_item' item.id %}" style="display:inline;">
+                            {% csrf_token %}
+                            <button type="submit" {% if item.qty >= 999999999 %}disabled{% endif %}
+                                class="w-8 h-8 rounded {% if item.qty >= 999999999 %}bg-gray-200 text-gray-400 cursor-not-allowed{% else %}bg-green-100 hover:bg-green-200 text-green-700{% endif %} font-bold text-lg leading-none transition duration-200"
+                                title="Increase quantity by 1">
+                                +
+                            </button>
+                        </form>
+                        <!-- FR-3: Options icon -->
+                        <button type="button"
+                            class="w-8 h-8 rounded bg-gray-100 hover:bg-gray-200 text-gray-600 flex items-center justify-center transition duration-200"
+                            title="Edit or delete this item"
+                            onclick="openEditModal({{ item.id }}, '{{ item.name|escapejs }}', {{ item.qty }}, {{ item.reorder_level }})">
+                            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                    d="M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.066 2.573c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.573 1.066c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.066-2.573c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.065z"/>
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"/>
+                            </svg>
+                        </button>
+                    </span>
+                </li>
+                {% endfor %}
+            </ul>
+            {% else %}
+            <!-- FR-13: Empty state -->
+            <div class="text-center text-gray-500 py-12 max-w-[800px] mx-auto">
+                <p class="text-lg">No items in inventory.</p>
+                <p class="mt-1">Click <strong>Add Item</strong> to get started.</p>
+            </div>
+            {% endif %}
+        </main>
+
+        <script>
+            // --- Modal helpers ---
+            function openModal(modalId) {
+                document.getElementById(modalId).style.display = "block";
+            }
+
+            function closeModal(modalId) {
+                document.getElementById(modalId).style.display = "none";
+            }
+
+            // Close buttons
+            document.querySelectorAll(".close").forEach(function(btn) {
+                btn.onclick = function() {
+                    closeModal(btn.getAttribute("data-modal"));
+                };
+            });
+
+            // Click outside modal to close
+            window.onclick = function(event) {
+                document.querySelectorAll(".modal").forEach(function(modal) {
+                    if (event.target === modal) {
+                        modal.style.display = "none";
+                    }
+                });
+            };
+
+            // --- Add Item Modal (FR-16) ---
+            document.getElementById("addItemBtn").onclick = function() {
+                openModal("addModal");
+            };
+
+            // --- Edit Item Modal (FR-3, FR-4) ---
+            function openEditModal(id, name, qty, reorderLevel) {
+                document.getElementById("editItemId").value = id;
+                document.getElementById("editItemName").value = name;
+                document.getElementById("editItemQty").value = qty;
+                document.getElementById("editReorderLevel").value = reorderLevel;
+                document.getElementById("editForm").action = "edit/" + id + "/";
+                // Store info for delete
+                document.getElementById("editDeleteBtn").setAttribute("data-id", id);
+                document.getElementById("editDeleteBtn").setAttribute("data-name", name);
+                openModal("editModal");
+            }
+
+            // --- Delete Confirmation (FR-10) ---
+            document.getElementById("editDeleteBtn").onclick = function() {
+                var id = this.getAttribute("data-id");
+                var name = this.getAttribute("data-name");
+                document.getElementById("deleteItemName").textContent = name;
+                document.getElementById("deleteForm").action = "delete/" + id + "/";
+                closeModal("editModal");
+                openModal("deleteModal");
+            };
+        </script>
+    </body>
+</html>
