@@ -101,7 +101,6 @@ def index(request):
 
     display = {
         "item_list": item_list,
-        "items_json": items_json,
         "error": error,
         "search_query": search_query,
         "sort_by": sort_by,
