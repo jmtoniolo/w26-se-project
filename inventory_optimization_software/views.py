@@ -56,13 +56,8 @@ def index(request):
 
         qty, error = validate_item(name, qty_str)
         if error is None:
-            updated = Item.objects.filter(
-                name=name, qty__lte=ItemConstraints.QTY_MAX - qty
-            ).update(qty=F("qty") + qty)
-            if updated:
-                return redirect("index")
             if Item.objects.filter(name=name).exists():
-                error = ErrorMessages.QTY_EXCEEDS_MAX
+                error = ErrorMessages.NAME_DUPLICATE
             else:
                 Item.objects.create(name=name, qty=qty)
                 return redirect("index")
