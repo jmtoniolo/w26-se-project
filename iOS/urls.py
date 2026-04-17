@@ -17,8 +17,10 @@ Including another URLconf
 from django.contrib import admin
 from django.urls import include, path
 
+from inventory_optimization_software import views
+
 
 urlpatterns = [
     path('admin/', admin.site.urls),
-    path('inventory_optimization_software/', include("inventory_optimization_software.urls")),
+    path('', views.index, name='index'),
 ]
