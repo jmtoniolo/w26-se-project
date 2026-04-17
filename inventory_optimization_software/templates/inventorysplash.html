@@ -62,7 +62,10 @@
                 color: white;
             }
 
-            .modal-body {padding: 16px 16px 24px;}
+            .modal-body {
+                padding: 16px 16px 24px;
+                overflow: visible;
+            }
 
             .list-container {
                 width: 100%;
@@ -114,7 +117,7 @@
                 display: inline-block;
                 cursor: help;
             }
-
+            
             .tooltip .tooltip-text {
                 visibility: hidden;
                 background-color: #1f2937;
@@ -122,15 +125,13 @@
                 text-align: center;
                 border-radius: 4px;
                 padding: 6px 10px;
-                position: absolute;
-                z-index: 20;
-                bottom: 125%;
-                left: 50%;
-                transform: translateX(-50%);
+                position: fixed;
+                z-index: 9999;
                 white-space: nowrap;
                 font-size: 12px;
                 opacity: 0;
                 transition: opacity 0.2s;
+                pointer-events: none;
             }
 
             .tooltip:hover .tooltip-text {
@@ -501,6 +502,24 @@
                 closeModal("editModal");
                 openModal("deleteModal");
             };
+
+            // --- Tooltip Positioning (Fixed positioning outside modals) ---
+            document.querySelectorAll(".tooltip").forEach(function(tooltip) {
+                const tooltipText = tooltip.querySelector(".tooltip-text");
+                if (!tooltipText) return;
+
+                tooltip.addEventListener("mouseenter", function() {
+                    const rect = tooltip.getBoundingClientRect();
+                    const tooltipRect = tooltipText.getBoundingClientRect();
+                    
+                    // Position tooltip above the trigger element
+                    const top = rect.top - tooltipRect.height - 10;
+                    const left = rect.left + rect.width / 2 - tooltipRect.width / 2;
+                    
+                    tooltipText.style.top = top + "px";
+                    tooltipText.style.left = left + "px";
+                });
+            });
         </script>
     </body>
 </html>
