@@ -110,6 +110,7 @@
             .col-id     { flex: 0.7; text-align: center; }
             .col-status { flex: 1; text-align: center; }
             .col-actions { flex: 1.5; text-align: right; display: flex; align-items: center; justify-content: flex-end; gap: 4px; }
+            .col-updated { flex: 1.5; text-align: center; }
 
             /* Tooltip styles */
             .tooltip {
@@ -385,6 +386,7 @@
                     <span class="col-id">ID</span>
                     <span class="col-status">Status</span>
                     <span class="col-actions">Actions</span>
+                    <span class="col-updated">Last Updated</span>
                 </li>
                 {% for item in item_list %}
                 <li class="list-row">
@@ -438,6 +440,13 @@
                                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"/>
                             </svg>
                         </button>
+                    </span>
+                    <!-- FR-22: Last Updated Timestamp -->
+                    <span class="col-updated">
+                        <span class="text-sm text-gray-600 tooltip">
+                            {{ item.updated_at|date:"M d, Y H:i" }}
+                            <span class="tooltip-text">Last modified on {{ item.updated_at|date:"F j, Y \a\t H:i:s" }}</span>
+                        </span>
                     </span>
                 </li>
                 {% endfor %}
