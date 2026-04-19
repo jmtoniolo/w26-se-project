@@ -127,7 +127,9 @@
                 padding: 6px 10px;
                 position: fixed;
                 z-index: 9999;
-                white-space: nowrap;
+                max-width: 260px;
+                white-space: normal;
+                word-break: break-word;
                 font-size: 12px;
                 opacity: 0;
                 transition: opacity 0.2s;
@@ -512,9 +514,21 @@
                     const rect = tooltip.getBoundingClientRect();
                     const tooltipRect = tooltipText.getBoundingClientRect();
                     
-                    // Position tooltip above the trigger element
-                    const top = rect.top - tooltipRect.height - 10;
-                    const left = rect.left + rect.width / 2 - tooltipRect.width / 2;
+                    // Position tooltip above the trigger element by default,
+                    // but keep it inside the visible viewport.
+                    let top = rect.top - tooltipRect.height - 10;
+                    let left = rect.left + rect.width / 2 - tooltipRect.width / 2;
+
+                    if (top < 8) {
+                        top = rect.bottom + 10;
+                    }
+                    if (left < 8) {
+                        left = 8;
+                    }
+                    const maxLeft = window.innerWidth - tooltipRect.width - 8;
+                    if (left > maxLeft) {
+                        left = maxLeft;
+                    }
                     
                     tooltipText.style.top = top + "px";
                     tooltipText.style.left = left + "px";
