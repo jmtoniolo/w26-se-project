@@ -3,4 +3,5 @@ venv/
 db.sqlite3
 .env
 .*
-
+dist/
+build/
